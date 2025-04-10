@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.db
+
+# Virtual env
+venv/
+env/
+ENV/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# System
+.DS_Store
+*.log
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# Excel files
+*.xlsx

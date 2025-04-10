@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Loan Repayment Schedule</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-light">
+    <div class="container mt-5">
+        <h2 class="mb-4">Loan Repayment Schedule Generator</h2>
+
+        <form method="POST">
+            <div class="mb-3">
+                <label for="principal" class="form-label">Loan Amount (₹):</label>
+                <input type="number" step="0.01" class="form-control" id="principal" name="principal" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="rate" class="form-label">Annual Interest Rate (%):</label>
+                <input type="number" step="0.01" class="form-control" id="rate" name="rate" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Choose Calculation Mode:</label><br>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="mode" value="emi" id="modeEmi" checked
+                        onclick="toggleFields()">
+                    <label class="form-check-label" for="modeEmi">Known EMI</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="mode" value="duration" id="modeDuration"
+                        onclick="toggleFields()">
+                    <label class="form-check-label" for="modeDuration">Known Duration</label>
+                </div>
+            </div>
+
+            <div class="mb-3" id="emiField">
+                <label for="emi" class="form-label">EMI Amount (₹):</label>
+                <input type="number" step="0.01" class="form-control" id="emi" name="emi">
+            </div>
+
+            <div class="mb-3 d-none" id="durationField">
+                <label for="duration" class="form-label">Loan Duration (Months):</label>
+                <input type="number" class="form-control" id="duration" name="duration">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Generate Schedule</button>
+        </form>
+
+        {% if data.schedule %}
+        <hr>
+        <h4 class="mt-5">Repayment Details</h4>
+        {% if data.mode == 'emi' %}
+        <p><strong>Months to repay:</strong> {{ data.months }}</p>
+        {% else %}
+        <p><strong>Calculated EMI:</strong> ₹{{ data.emi }}</p>
+        {% endif %}
+        <p><strong>Total Interest Paid:</strong> ₹{{ data.total_interest }}</p>
+
+        <table class="table table-bordered table-striped mt-4">
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>EMI</th>
+                    <th>Interest Paid</th>
+                    <th>Principal Paid</th>
+                    <th>Remaining Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data.schedule %}
+                <tr>
+                    <td>{{ row['Month'] }}</td>
+                    <td>{{ row['EMI'] }}</td>
+                    <td>{{ row['Interest Paid'] }}</td>
+                    <td>{{ row['Principal Paid'] }}</td>
+                    <td>{{ row['Remaining Balance'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="/download" class="btn btn-success mt-3">Download as Excel</a>
+
+        <canvas id="loanChart" width="800" height="400" class="mt-5"></canvas>
+
+        <script>
+            const months = {{ data.schedule | map(attribute = 'Month') | list | safe }};
+            const interestPaid = {{ data.schedule | map(attribute = 'Interest Paid') | list | safe }};
+            const principalPaid = {{ data.schedule | map(attribute = 'Principal Paid') | list | safe }};
+
+            const ctx = document.getElementById('loanChart').getContext('2d');
+            const loanChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Interest Paid',
+                            data: interestPaid,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Principal Paid',
+                            data: principalPaid,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Month'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Amount (₹)'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        </script>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleFields() {
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+            document.getElementById('emiField').classList.toggle('d-none', mode !== 'emi');
+            document.getElementById('durationField').classList.toggle('d-none', mode !== 'duration');
+        }
+        toggleFields(); // Initial toggle on load
+    </script>
+</body>
+
+</html>
